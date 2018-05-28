@@ -22,7 +22,7 @@ public class SlaveServerThreadProtocol implements Runnable {
 			System.out.println(clientMessege.getMessege());
 			clientMessege.setMessege("#### client messege -- Done ###");
 
-			oos.writeObject(clientMessege);
+			oos.writeUnshared(clientMessege);
 			System.out.println("SlaveServerThreadProtocol/Slave finished");
 
 		} catch (IOException | ClassNotFoundException e) {
