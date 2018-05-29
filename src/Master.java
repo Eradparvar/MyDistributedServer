@@ -4,32 +4,34 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Master {
-	static ArrayList<ObjectOutputStream> oosSlaveList = new ArrayList<>();
-	static ArrayList<ObjectInputStream> oisSlaveList = new ArrayList<>();
+	static ArrayList<ServerInfo> slaveDir = new ArrayList<>();
+
+	static int slaveNum = 0;
 
 	public static void main(String[] args) {
 		// Hardcode in IP and Port here if required
-		args = new String[] { "100" };
+		// args = new String[] { "100" };
 
 		if (args.length != 1) {
-			System.err.println("Usage: java MasterServer <port number>");
+			System.err.println("Error: Usage: java MasterServer <port number>");
 			System.exit(1);
 		}
 
 		int portNumber = Integer.parseInt(args[0]);
-		/// test area
-		setupSlaveStreams();
 
-		// end area
-		try (ServerSocket masterServerSocket = new ServerSocket(100);) {
+		setupSlaveDir();
+
+		try (ServerSocket masterServerSocket = new ServerSocket(portNumber);) {
 			System.out.println("MasterServer Started with port " + portNumber);
-			boolean runServer = true;
-			while (runServer) {
+			boolean runMasterServer = true;
+			while (runMasterServer) {
 				Socket clientSocket = masterServerSocket.accept();
-				new Thread(new MasterServerThreadProtocol(clientSocket, oosSlaveList, oisSlaveList)).start();
+				new Thread(new MasterServerThreadProtocol(clientSocket, slaveNum, slaveDir)).start();
 				System.out.println("Master created thread to deal with client reqest");
+				increment();
 			}
 
 		} catch (Exception e) {
@@ -38,20 +40,25 @@ public class Master {
 
 	}
 
-	private static void setupSlaveStreams() {
-		// creats OOS and OIS for the slave
-
-		/// move to method
-		try {
-			int portNum = 200;
-			ServerSocket serverSocket = new ServerSocket(portNum);
-			Socket slaveSocket = serverSocket.accept();
-			oosSlaveList.add(new ObjectOutputStream(slaveSocket.getOutputStream()));
-			oisSlaveList.add(new ObjectInputStream(slaveSocket.getInputStream()));
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+	private synchronized static void increment() {
+		if (slaveNum == 0) {
+			slaveNum++;
+			System.out.println("changes slavenum " + slaveNum);
+		} else {
+			slaveNum = 0;
+			System.out.println("changes slavenum " + slaveNum);
 		}
+	}
+
+	private static void setupSlaveDir() {
+		// creates slave a dir of all the slavs host and port num
+		// later can read from file
+		// slave 1
+		ServerInfo serverInfo = new ServerInfo("127.0.0.1", 200);
+		slaveDir.add(serverInfo);
+		// slave 2
+		ServerInfo serverInfo2 = new ServerInfo("127.0.0.1", 300);
+		slaveDir.add(serverInfo2);
 
 	}
 }

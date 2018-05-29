@@ -16,38 +16,24 @@ public class Client {
 		}
 		String hostName = args[0];
 		int portNumber = Integer.parseInt(args[1]);
-		System.out.println("Client started on <HOST> " + hostName + "<PORT> " + portNumber);
+		System.out.println("Client started on <HOST> " + hostName + " <PORT> " + portNumber);
+		SocketWrapper socketWrapperClient = null;
 		for (int i = 0; i < 2; i++) {
-			SocketWrapper socketWrapperClient = new SocketWrapper(hostName, portNumber);
+			socketWrapperClient = new SocketWrapper(hostName, portNumber);
 			System.out.println("Created wrapper");
 
-			Messege messege = new Messege("Client Messege -- Undone");
+			Messege messege = new Messege("Image", 3);
 			socketWrapperClient.writeUnshared(messege);
 			System.out.println("Sent messege to master");
 			messege = (Messege) socketWrapperClient.readObject();
 			System.out.println("Got messege form master");
-			socketWrapperClient.closeAll();
-			System.out.println(messege.getMessege());
+
+			System.out.println("Recived " + messege.getMessege());
 			System.out.println("*****Cleint done ******");
 		}
-		///
-		/*
-		 * try (Socket clientSocket = new Socket(hostName, portNumber);
-		 * ObjectOutputStream oos = new
-		 * ObjectOutputStream(clientSocket.getOutputStream()); ObjectInputStream ois =
-		 * new ObjectInputStream(clientSocket.getInputStream())) { for (int i = 0; i <
-		 * 3; i++) { Messege messege = new Messege("client messege -- Undone");
-		 * oos.writeUnshared(messege);
-		 * 
-		 * System.out.println("Cleint sent messege to master");
-		 * 
-		 * messege = (Messege) ois.readObject();
-		 * 
-		 * System.out.println(messege.getMessege());
-		 * System.out.println("*****Cleint done ******" + i); TimeUnit.SECONDS.sleep(2);
-		 * System.out.println("Slepted"); } System.out.println("Client problem not 3");
-		 * } catch (Exception e) { // TODO: handle exception }
-		 */
+
+		socketWrapperClient.closeAll();
+
 	}
 
 }

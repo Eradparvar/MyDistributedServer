@@ -5,25 +5,25 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 public class MasterServerThreadProtocol implements Runnable {
 	Socket clientSocket;
-	private ArrayList<ObjectOutputStream> oosSlaveList;
-	private ArrayList<ObjectInputStream> oisSlaveList;
+	ArrayList<ServerInfo> slaveDir;
 	ObjectOutputStream clientOOS;
 	ObjectInputStream clientOIS;
+	int slaveNum;
 
-	public MasterServerThreadProtocol(Socket clientSocket, ArrayList<ObjectOutputStream> oosList,
-			ArrayList<ObjectInputStream> oisList) {
+	public MasterServerThreadProtocol(Socket clientSocket, int slaveNum, ArrayList<ServerInfo> slaveDir) {
 		this.clientSocket = clientSocket;
-		this.oosSlaveList = oosList;
-		this.oisSlaveList = oisList;
+		this.slaveDir = slaveDir;
+		this.slaveNum = slaveNum;
 		try {
 			this.clientOOS = new ObjectOutputStream(clientSocket.getOutputStream());
 			this.clientOIS = new ObjectInputStream(clientSocket.getInputStream());
 		} catch (EOFException e) {
-			e.getStackTrace();
+			e.getStackTrace();// remove later-----------
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -31,33 +31,54 @@ public class MasterServerThreadProtocol implements Runnable {
 
 	}
 
-	String hostName = "127.0.0.1";
-
-	// ------------whole purplse to send object to slave
+	// ------------whole purpose to send object to slave and get it back then send
+	// to client
 	@Override
 	public void run() {
 
 		try {
 			boolean runThread = true;
 			while (runThread) {
-				// System.out.println(clientOIS.readUTF());
-				Messege clientMessege = (Messege) clientOIS.readObject(); // get messege form client
-				/// next method
+				Messege clientMessege = (Messege) clientOIS.readObject(); // get message form client
 				System.out.println("Got messge from client");
-				clientMessege.setMessege("Master " + clientMessege);
-				System.out.println("Changed messege to master");
-				oosSlaveList.get(0).writeUnshared(clientMessege); // send messege to slave
-				System.out.println("Sent messege to slave- see slave");
-				// come back here
-				// TODO get finished messege from slave
-				Messege messegeFromSlave = (Messege) oisSlaveList.get(0).readObject();
-
+				System.out.println("Changed client messege to master");
+				// send cleintMessege to slave
+				// 1- send cleint task to slave and revie input
+				// 2- how many connections do you have salve
+				// will have a method that returns the slave socket info and passes it into the
+				// masterSocket
+				System.out.println(slaveNum);
+				// sening and revieicg from slave--
+				ServerInfo slaveInfo = slaveDir.get(slaveNum);
+				String slaveHost = slaveInfo.getHostName();
+				int slavePort = slaveInfo.getPortNum();
+				SocketWrapper slaveSocketWrapper = new SocketWrapper(slaveHost, slavePort);
+				System.out.println("created slavWrapper");
+				slaveSocketWrapper.writeUnshared(clientMessege);
+				System.out.println("wrote to slave");
+				// get messege from slave here
+				Messege completedMessege = (Messege) slaveSocketWrapper.readObject();
 				System.out.println("Got messege from slave");
-				clientOOS.writeUnshared(messegeFromSlave);
+				// send completedMessege to client
+				// end send and recive from slave--
+
+				// Socket masterSocket = new Socket("127.0.0.1", 200);
+				// ObjectOutputStream oosSlave = new
+				// ObjectOutputStream(masterSocket.getOutputStream());
+				// ObjectInputStream oisSlave = new
+				// ObjectInputStream(masterSocket.getInputStream());
+				// oosSlave.writeUnshared(clientMessege);
+				// // come back here
+				// Messege completedMessege = (Messege) oisSlave.readObject(); // get
+				// completedMessege from slave
+
+				clientOOS.writeUnshared(completedMessege);
 				clientOOS.flush();
 				System.out.println("Sent messege back to cleint !!");
+
 			}
-		} catch (EOFException e) {
+		} catch (EOFException eof) {
+		} catch (SocketException se) {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

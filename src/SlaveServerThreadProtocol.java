@@ -5,25 +5,30 @@ import java.net.Socket;
 
 public class SlaveServerThreadProtocol implements Runnable {
 
-	private Socket clientSocket;
+	private Socket masterSocket;
+	private int slaveNum;
 
-	public SlaveServerThreadProtocol(Socket clientSocket) {
-		this.clientSocket = clientSocket;
+	public SlaveServerThreadProtocol(Socket masterSocket, int slaveNum) {
+		this.masterSocket = masterSocket;
+		this.slaveNum = slaveNum;
 	}
 
 	// ---whole [purplse so send socket back to MasterServerThreadProtocol
+	// 1- how many connection do you have
+	// 2- add task to queeu
 	@Override
 	public void run() {
 
-		try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
-				ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())) {
+		try (ObjectInputStream ois = new ObjectInputStream(masterSocket.getInputStream());
+				ObjectOutputStream oos = new ObjectOutputStream(masterSocket.getOutputStream())) {
 
-			Messege clientMessege = (Messege) ois.readObject();
-			System.out.println(clientMessege.getMessege());
-			clientMessege.setMessege("#### client messege -- Done ###");
+			Messege masterMessege = (Messege) ois.readObject();
+			System.out.println(masterMessege.getMessege());
+			// masterMessege.setMessege("#### slave did messege -- Done ###");
+			masterMessege.run(slaveNum);
 
-			oos.writeUnshared(clientMessege);
-			System.out.println("SlaveServerThreadProtocol/Slave finished");
+			oos.writeUnshared(masterMessege);
+			System.out.println("SlaveServerThreadProtocol/Slave sent back to master -- finished");
 
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
