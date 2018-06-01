@@ -1,0 +1,8 @@
+/.metadata/
+/.recommenders/
+
+.settings/ 
+bin/ 
+.gitIgnore
+
+*.class

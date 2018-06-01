@@ -22,7 +22,7 @@ public class Client {
 			socketWrapperClient = new SocketWrapper(hostName, portNumber);
 			System.out.println("Created wrapper");
 
-			Messege messege = new Messege("Image", 3);
+			Messege messege = new Messege("Image", 1);
 			socketWrapperClient.writeUnshared(messege);
 			System.out.println("Sent messege to master");
 			messege = (Messege) socketWrapperClient.readObject();

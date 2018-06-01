@@ -1,15 +1,17 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class Master {
 	static ArrayList<ServerInfo> slaveDir = new ArrayList<>();
-
 	static int slaveNum = 0;
+	static int roundRobbinCounter = 0;
 
 	public static void main(String[] args) {
 		// Hardcode in IP and Port here if required
@@ -27,9 +29,12 @@ public class Master {
 		try (ServerSocket masterServerSocket = new ServerSocket(portNumber);) {
 			System.out.println("MasterServer Started with port " + portNumber);
 			boolean runMasterServer = true;
+			int chossenSlave;
 			while (runMasterServer) {
 				Socket clientSocket = masterServerSocket.accept();
-				new Thread(new MasterServerThreadProtocol(clientSocket, slaveNum, slaveDir)).start();
+				chossenSlave = findSlaveLeastCon();
+				incrementNumOfTasks(chossenSlave);
+				new Thread(new MasterServerThreadProtocol(clientSocket, chossenSlave, slaveDir)).start();
 				System.out.println("Master created thread to deal with client reqest");
 				increment();
 			}
@@ -37,6 +42,47 @@ public class Master {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+	}
+
+	// find the slave with the least num of tasks. If tie, then it will
+	// round robbin between the slaves
+	public static synchronized int findSlaveLeastCon() throws Exception {
+		if (slaveDir.size() == 0)
+			throw new Exception("Slave list is empty. Cant find least connection");
+
+		else if (slaveDir.size() == 1) {
+			System.out.println("---------size 1");
+			return 0;
+
+		}
+
+		int lowest = slaveDir.get(1).getNumOfTaskOnQueue();
+		int nextNum;
+		boolean tie = false;
+		System.out.println("lowest " + lowest);
+		for (int i = 1; i < slaveDir.size(); i++) {
+			nextNum = slaveDir.get(i).getNumOfTaskOnQueue();
+			System.out.println("nextNum " + nextNum);
+			if (nextNum < lowest) {
+				lowest = nextNum;
+				System.out.println("new lowest " + lowest);
+			} else if (nextNum == lowest) {
+				tie = true;
+				System.out.println("tie " + tie);
+				System.out.println("RR " + roundRobbinCounter);
+				roundRobbinCounter = ++roundRobbinCounter % slaveDir.size();
+				System.out.println("RR " + roundRobbinCounter);
+				break;
+			}
+		}
+
+		return (tie == false) ? lowest : roundRobbinCounter;
+	}
+
+	public static void incrementNumOfTasks(int slaveNum) {
+		// the method addTaskToQueue() is synchronized. See ServerInfo class
+		slaveDir.get(slaveNum).incrementNumOfTasks();
 
 	}
 

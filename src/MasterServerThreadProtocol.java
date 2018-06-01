@@ -13,12 +13,12 @@ public class MasterServerThreadProtocol implements Runnable {
 	ArrayList<ServerInfo> slaveDir;
 	ObjectOutputStream clientOOS;
 	ObjectInputStream clientOIS;
-	int slaveNum;
+	int chossenSlave;
 
-	public MasterServerThreadProtocol(Socket clientSocket, int slaveNum, ArrayList<ServerInfo> slaveDir) {
+	public MasterServerThreadProtocol(Socket clientSocket, int chossenSlave, ArrayList<ServerInfo> slaveDir) {
 		this.clientSocket = clientSocket;
 		this.slaveDir = slaveDir;
-		this.slaveNum = slaveNum;
+		this.chossenSlave = chossenSlave;
 		try {
 			this.clientOOS = new ObjectOutputStream(clientSocket.getOutputStream());
 			this.clientOIS = new ObjectInputStream(clientSocket.getInputStream());
@@ -41,37 +41,23 @@ public class MasterServerThreadProtocol implements Runnable {
 			while (runThread) {
 				Messege clientMessege = (Messege) clientOIS.readObject(); // get message form client
 				System.out.println("Got messge from client");
-				System.out.println("Changed client messege to master");
 				// send cleintMessege to slave
-				// 1- send cleint task to slave and revie input
-				// 2- how many connections do you have salve
-				// will have a method that returns the slave socket info and passes it into the
-				// masterSocket
-				System.out.println(slaveNum);
+				System.out.println("chossenSlave " + chossenSlave);
+
 				// sening and revieicg from slave--
-				ServerInfo slaveInfo = slaveDir.get(slaveNum);
+				ServerInfo slaveInfo = slaveDir.get(chossenSlave);
 				String slaveHost = slaveInfo.getHostName();
 				int slavePort = slaveInfo.getPortNum();
+
 				SocketWrapper slaveSocketWrapper = new SocketWrapper(slaveHost, slavePort);
 				System.out.println("created slavWrapper");
 				slaveSocketWrapper.writeUnshared(clientMessege);
 				System.out.println("wrote to slave");
 				// get messege from slave here
 				Messege completedMessege = (Messege) slaveSocketWrapper.readObject();
+				decrementNumOfTasks(chossenSlave);
+
 				System.out.println("Got messege from slave");
-				// send completedMessege to client
-				// end send and recive from slave--
-
-				// Socket masterSocket = new Socket("127.0.0.1", 200);
-				// ObjectOutputStream oosSlave = new
-				// ObjectOutputStream(masterSocket.getOutputStream());
-				// ObjectInputStream oisSlave = new
-				// ObjectInputStream(masterSocket.getInputStream());
-				// oosSlave.writeUnshared(clientMessege);
-				// // come back here
-				// Messege completedMessege = (Messege) oisSlave.readObject(); // get
-				// completedMessege from slave
-
 				clientOOS.writeUnshared(completedMessege);
 				clientOOS.flush();
 				System.out.println("Sent messege back to cleint !!");
@@ -87,5 +73,10 @@ public class MasterServerThreadProtocol implements Runnable {
 			e.printStackTrace();
 		}
 
+	}
+
+	private void decrementNumOfTasks(int chossenSlave) {
+		slaveDir.get(chossenSlave).decrementNumOfTasks();
+		
 	}
 }
