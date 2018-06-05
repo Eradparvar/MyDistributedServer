@@ -3,27 +3,23 @@ import java.io.Serializable;
 public class Messege implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private String messege;
+	private String jobName;
 	private int jobLength;
 	private int completedBySlave;
 
-	public Messege(String messege, int jobLength) {
-		this.messege = messege;
-		this.jobLength = jobLength * 1000;
+	public Messege(String jobName, int jobLength) {
+		this.jobName = jobName;
+		this.jobLength = jobLength;
 	}
 
-	public String getMessege() {
-		return messege.toString();
-	}
-
-	public void setMessege(String messege) {
-		this.messege = messege;
+	public int getCompletedBySlave() {
+		return completedBySlave;
 	}
 
 	public void run(int slaveNun) {
 		try {
-			System.out.println("Running Task:$$$$ " + messege.toString());
-			Thread.sleep(jobLength);
+			System.out.println("Running Task:" + this.toString());
+			Thread.sleep(jobLength * 1000);
 			setCompletedBySlave(slaveNun);
 
 		} catch (InterruptedException e) {
@@ -33,11 +29,13 @@ public class Messege implements Serializable {
 
 	}
 
-	public int getCompletedBySlave() {
-		return completedBySlave;
-	}
-
 	public void setCompletedBySlave(int completedBySlave) {
 		this.completedBySlave = completedBySlave;
+	}
+
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return "Job Name: " + jobName + " Job length: " + jobLength;
 	}
 }

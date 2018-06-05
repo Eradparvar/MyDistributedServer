@@ -3,7 +3,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -13,21 +12,57 @@ public class MasterServerThreadProtocol implements Runnable {
 	ArrayList<ServerInfo> slaveDir;
 	ObjectOutputStream clientOOS;
 	ObjectInputStream clientOIS;
-	int chossenSlave;
 
-	public MasterServerThreadProtocol(Socket clientSocket, int chossenSlave, ArrayList<ServerInfo> slaveDir) {
+	public MasterServerThreadProtocol(Socket clientSocket, ArrayList<ServerInfo> slaveDir) {
 		this.clientSocket = clientSocket;
 		this.slaveDir = slaveDir;
-		this.chossenSlave = chossenSlave;
 		try {
 			this.clientOOS = new ObjectOutputStream(clientSocket.getOutputStream());
 			this.clientOIS = new ObjectInputStream(clientSocket.getInputStream());
 		} catch (EOFException e) {
 			e.getStackTrace();// remove later-----------
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+	}
+
+	private void decrementNumOfTasks(int chossenSlave) {
+		slaveDir.get(chossenSlave).decrementNumOfTasks();
+
+	}
+
+	public synchronized int findSlaveLeastCon() throws Exception {
+		if (slaveDir.size() == 0)
+			throw new Exception("Slave list is empty. Cant find least connection");
+
+		else if (slaveDir.size() == 1) {
+			System.out.println("Only 1 slave");
+			return 0;
+
+		}
+
+		int lowest = slaveDir.get(0).getNumOfTaskOnQueue();
+		int nextNum;
+		boolean tie = false;
+		int chossenSlave = 0;
+		System.out.println("lowest " + lowest);
+		for (int i = 1; i < slaveDir.size(); i++) {
+			nextNum = slaveDir.get(i).getNumOfTaskOnQueue();
+			System.out.println("nextNum " + nextNum);
+			if (nextNum < lowest) {
+				lowest = nextNum;
+				chossenSlave = i;
+				System.out.println("new lowest " + lowest);
+			}
+		}
+
+		return chossenSlave;
+	}
+
+	public void incrementNumOfTasks(int slaveNum) {
+		// the method addTaskToQueue() is synchronized. See ServerInfo class
+		slaveDir.get(slaveNum).incrementNumOfTasks();
 
 	}
 
@@ -35,26 +70,31 @@ public class MasterServerThreadProtocol implements Runnable {
 	// to client
 	@Override
 	public void run() {
-
+		ObjectOutputStream slaveOOS;
+		ObjectInputStream slaveOIS;
 		try {
 			boolean runThread = true;
+			int chossenSlave;
 			while (runThread) {
 				Messege clientMessege = (Messege) clientOIS.readObject(); // get message form client
 				System.out.println("Got messge from client");
 				// send cleintMessege to slave
-				System.out.println("chossenSlave " + chossenSlave);
 
-				// sening and revieicg from slave--
+				chossenSlave = findSlaveLeastCon();
+				incrementNumOfTasks(chossenSlave);
+
+				// sending and revieicg from slave--
 				ServerInfo slaveInfo = slaveDir.get(chossenSlave);
 				String slaveHost = slaveInfo.getHostName();
 				int slavePort = slaveInfo.getPortNum();
+				System.out.println(slaveHost + " ////---" + slavePort);
 
-				SocketWrapper slaveSocketWrapper = new SocketWrapper(slaveHost, slavePort);
-				System.out.println("created slavWrapper");
-				slaveSocketWrapper.writeUnshared(clientMessege);
-				System.out.println("wrote to slave");
-				// get messege from slave here
-				Messege completedMessege = (Messege) slaveSocketWrapper.readObject();
+				Socket slaveSocket = new Socket(slaveHost, slavePort);
+				slaveOOS = new ObjectOutputStream(slaveSocket.getOutputStream());
+				slaveOIS = new ObjectInputStream(slaveSocket.getInputStream());
+				slaveOOS.writeObject(clientMessege);
+				Messege completedMessege = (Messege) slaveOIS.readObject();
+
 				decrementNumOfTasks(chossenSlave);
 
 				System.out.println("Got messege from slave");
@@ -71,12 +111,10 @@ public class MasterServerThreadProtocol implements Runnable {
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-	}
-
-	private void decrementNumOfTasks(int chossenSlave) {
-		slaveDir.get(chossenSlave).decrementNumOfTasks();
-		
 	}
 }

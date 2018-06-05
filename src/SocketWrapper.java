@@ -19,23 +19,6 @@ public class SocketWrapper<T> {
 		}
 	}
 
-	public void writeUnshared(T t) {
-		try {
-			oos.writeUnshared(t);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public ObjectOutputStream getObjectOutputStream() {
-		return oos;
-	}
-
-	public ObjectInputStream getObjectInputStream() {
-		return ois;
-	}
-
 	public void closeAll() {
 		try {
 			socket.close();
@@ -46,6 +29,14 @@ public class SocketWrapper<T> {
 			e.printStackTrace();
 		}
 
+	}
+
+	public ObjectInputStream getObjectInputStream() {
+		return ois;
+	}
+
+	public ObjectOutputStream getObjectOutputStream() {
+		return oos;
 	}
 
 	public Object readObject() {
@@ -61,6 +52,15 @@ public class SocketWrapper<T> {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public void writeUnshared(T t) {
+		try {
+			oos.writeUnshared(t);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

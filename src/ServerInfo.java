@@ -11,12 +11,24 @@ public class ServerInfo {
 
 	}
 
+	public synchronized void decrementNumOfTasks() {
+		numOfTasks--;
+	}
+
 	public String getHostName() {
 		return hostName;
 	}
 
+	public int getNumOfTaskOnQueue() {
+		return numOfTasks;
+	}
+
 	public int getPortNum() {
 		return portNum;
+	}
+
+	public synchronized void incrementNumOfTasks() {
+		numOfTasks++;
 	}
 
 	public void setHostName(String hostName) {
@@ -25,18 +37,6 @@ public class ServerInfo {
 
 	public void setPortNum(int portNum) {
 		this.portNum = portNum;
-	}
-
-	public int getNumOfTaskOnQueue() {
-		return numOfTasks;
-	}
-
-	public synchronized void incrementNumOfTasks() {
-		numOfTasks++;
-	}
-
-	public synchronized void decrementNumOfTasks() {
-		numOfTasks--;
 	}
 
 }

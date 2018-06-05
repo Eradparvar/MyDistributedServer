@@ -1,7 +1,3 @@
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -28,7 +24,7 @@ public class Slave {
 			while (runSlaveServer) {
 				Socket masterSocket = slaveServerSocket.accept();
 				new Thread(new SlaveServerThreadProtocol(masterSocket, slaveNum)).start();
-				System.out.println("Slave created thread to deal with master reqest");
+
 			}
 		} catch (Exception e) {
 			// TODO: handle exception

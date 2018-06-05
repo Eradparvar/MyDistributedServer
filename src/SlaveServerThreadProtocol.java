@@ -23,12 +23,10 @@ public class SlaveServerThreadProtocol implements Runnable {
 				ObjectOutputStream oos = new ObjectOutputStream(masterSocket.getOutputStream())) {
 
 			Messege masterMessege = (Messege) ois.readObject();
-			System.out.println(masterMessege.getMessege());
-			// masterMessege.setMessege("#### slave did messege -- Done ###");
 			masterMessege.run(slaveNum);
 
 			oos.writeUnshared(masterMessege);
-			System.out.println("SlaveServerThreadProtocol/Slave sent back to master -- finished");
+			System.out.println("Slave sent back " + masterMessege);
 
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
