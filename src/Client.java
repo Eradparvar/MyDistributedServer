@@ -1,3 +1,5 @@
+
+import java.util.Random;
 import java.util.Scanner;
 
 public class Client {
@@ -14,26 +16,33 @@ public class Client {
 		String hostName = args[0];
 		int portNumber = Integer.parseInt(args[1]);
 		System.out.println("Client started on <HOST> " + hostName + " <PORT> " + portNumber);
-		SocketWrapper socketWrapperClient = null;
-
-		socketWrapperClient = new SocketWrapper(hostName, portNumber);
+		SocketWrapper socketWrapperClient = new SocketWrapper(hostName, portNumber);
+		
+		Random rand = new Random();
+		
 		Scanner sc = new Scanner(System.in);
 		boolean runClient = true;
 		while (runClient) {
-			System.out.println("Enter Job type and Job lenght");
+			System.out.println("Enter Job type");
 			String type = "java";// sc.next();
-			int jobLenght = 1;// sc.nextInt();
-			Messege messege = new Messege(type, jobLenght);
-			socketWrapperClient.writeUnshared(messege);
+			System.out.println("Enter Job length");
+			int jobLength = rand.nextInt(5)+1;// sc.nextInt();
+			Message message = new Message(type, jobLength);
+			socketWrapperClient.writeUnshared(message);
+			
+			//new Thread(new ClientGetsCompletedTask(socketWrapperClient)).start();
+			
 			System.out.println("Sent task to master, waiting for completion");
-			messege = (Messege) socketWrapperClient.readObject();
-			System.out.println("Recived " + messege);
-			System.out.println("*****Cleint done ******");
+			
+			message = (Message) socketWrapperClient.readObject();
+			System.out.println("Received " + message);
+			System.out.println("*****Client done ******");
+			
 			sc.nextLine();
 		}
 
 		socketWrapperClient.closeAll();
-
+		sc.close();
 	}
 
 }

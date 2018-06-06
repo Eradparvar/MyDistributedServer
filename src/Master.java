@@ -8,14 +8,10 @@ import java.util.Scanner;
 public class Master {
 	static ArrayList<ServerInfo> slaveDir = new ArrayList<>();
 	static int slaveNum = 0;
-	static int roundRobbinCounter = 0;
-
-	// find the slave with the least num of tasks. If tie, then it will
-	// round robbin between the slaves
 
 	public static void main(String[] args) {
 		// Hardcode in IP and Port here if required
-		// args = new String[] { "100" };
+		args = new String[] { "100" };
 
 		if (args.length != 1) {
 			System.err.println("Error: Usage: java MasterServer <port number>");
@@ -24,31 +20,28 @@ public class Master {
 
 		int portNumber = Integer.parseInt(args[0]);
 
-		System.out.println("NUMBER of slaves " + setupSlaveDir());
+		System.out.println("NUMBER of slaves " + setUpSlaveDir());
 
 		try (ServerSocket masterServerSocket = new ServerSocket(portNumber);) {
-			System.out.println("MasterServer Started with port " + portNumber);
+			System.out.println("MasterServer started with port " + portNumber);
 			boolean runMasterServer = true;
-			int chossenSlave;
 			while (runMasterServer) {
 				Socket clientSocket = masterServerSocket.accept();
 
-				new Thread(new MasterServerThreadProtocol(clientSocket, slaveDir)).start();
-				System.out.println("Master created thread to deal with client reqest");
+				new Thread(new MasterReadFromClientWriteToSlave(clientSocket, slaveDir)).start();
+				System.out.println("Master created thread to deal with client request");
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 	}
 
-	private static int setupSlaveDir() {
-		// creates slave a dir of all the slavs host and port num
+	private static int setUpSlaveDir() {
+		// creates slave a dir of all the slaves host and port num
 		// later can read from file
 		// slave 1
 		String fileName = "config.txt";
-		String line = null;
 		try {
 			Scanner sc = new Scanner(new FileReader(fileName));
 			String hostName;

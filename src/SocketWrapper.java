@@ -1,10 +1,11 @@
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class SocketWrapper<T> {
+public class SocketWrapper {
 	private Socket socket;
 	private ObjectOutputStream oos;
 	private ObjectInputStream ois;
@@ -16,8 +17,19 @@ public class SocketWrapper<T> {
 			ois = new ObjectInputStream(socket.getInputStream());
 		} catch (Exception e) {
 			// TODO: handle exception
+			e.printStackTrace();
 		}
 	}
+	/*
+	public SocketWrapper(Socket sock) {
+		try {
+			socket = sock;
+			oos = new ObjectOutputStream(socket.getOutputStream());
+			ois = new ObjectInputStream(socket.getInputStream());
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}*/
 
 	public void closeAll() {
 		try {
@@ -43,6 +55,7 @@ public class SocketWrapper<T> {
 		try {
 			return ois.readObject();
 		} catch (EOFException e) {
+			e.printStackTrace();
 			// do nothing
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -54,9 +67,9 @@ public class SocketWrapper<T> {
 		return null;
 	}
 
-	public void writeUnshared(T t) {
+	public void writeUnshared(Object objectToWrite) {
 		try {
-			oos.writeUnshared(t);
+			oos.writeUnshared(objectToWrite);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -1,3 +1,4 @@
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,17 +14,15 @@ public class SlaveServerThreadProtocol implements Runnable {
 		this.slaveNum = slaveNum;
 	}
 
-	// ---whole [purplse so send socket back to MasterServerThreadProtocol
-	// 1- how many connection do you have
-	// 2- add task to queeu
+	// runs the task and sends it back to MasterServerThreadProtocol
 	@Override
 	public void run() {
 
 		try (ObjectInputStream ois = new ObjectInputStream(masterSocket.getInputStream());
 				ObjectOutputStream oos = new ObjectOutputStream(masterSocket.getOutputStream())) {
 
-			Messege masterMessege = (Messege) ois.readObject();
-			masterMessege.run(slaveNum);
+			Message masterMessege = (Message) ois.readObject();
+			masterMessege.execute(slaveNum);
 
 			oos.writeUnshared(masterMessege);
 			System.out.println("Slave sent back " + masterMessege);
